@@ -39,18 +39,21 @@ class GestionDeVinedos:
 
         :return: Lista de strings con los números fiscales de los gerentes, ordenados alfabeticamente por nombre.
         """
-        return [manager["tax_number"] for manager in sorted(self.managers, key=lambda x: x["name"])]
-
+        sorted_managers = sorted(self.managers, key=lambda x: x["name"])
+        tax_numbers = [manager["tax_number"] for manager in sorted_managers]
+        return tax_numbers
     def area_total_variedad_uvas(self):
         """
         Genera un diccionario donde las claves son los nombres de las uvas y los valores son la suma total del area plantada para cada variedad de uva.
 
         :return: Diccionario donde cada clave es el nombre de una variedad de uva y el valor es el area total cultivada.
         """
-        grape_areas = {grape["name"]: 0 for grape in self.grapes}
+        grape_names = {grape['id']: grape['name'] for grape in self.grapes}
+        grape_areas = {grape['name']: 0 for grape in self.grapes}
         for vineyard in self.vineyards:
-            grape_name = next(grape["name"] for grape in self.grapes if grape["id"] == vineyard["grape_id"])
-            grape_areas[grape_name] += vineyard["area"]
+            grape_name = grape_names[vineyard['grape_id']]
+            grape_areas[grape_name] += vineyard['area']
+
         return grape_areas
 
     def area_total_adm_manager(self):
@@ -59,27 +62,32 @@ class GestionDeVinedos:
 
         :return: Diccionario con el nombre de cada gerente como clave y el área total que administra como valor.
         """
-        manager_areas = {manager["name"]: 0 for manager in self.managers}
-        for vineyard in self.vineyards:
-            manager_name = next(manager["name"] for manager in self.managers if manager["id"] == vineyard["manager_id"])
-            manager_areas[manager_name] += vineyard["area"]
-        return manager_areas
+        manager_names = {manager['id']: manager['name'] for manager in self.managers}
+        manager_areas = {manager['name']: 0 for manager in self.managers}
 
+        for vineyard in self.vineyards:
+            manager_name = manager_names[vineyard['manager_id']]
+            manager_areas[manager_name] += vineyard['area']
+
+        return manager_areas
     def vinedos_y_gerentes(self):
         """
         Retorna un diccionario dode las claves son los nombres de los viñedos y los valores son listas de nombres de sus gerentes, ordenados alfabeticamente.
 
         :return: Diccionario donde cada clave es el nombre de un viñedo y el valor es una lista de nombres de gerentes que lo administran, ordenados alfabéticamente.
         """
-        vineyard_managers = {vineyard["name"]: [] for vineyard in self.vineyards_info}
+        vineyard_names = {info['id']: info['name'] for info in self.vineyards_info}
+        manager_names = {manager['id']: manager['name'] for manager in self.managers}
+        vineyard_managers = {info['name']: set() for info in self.vineyards_info}
+
         for vineyard in self.vineyards:
-            vineyard_name = next(
-                vinfo["name"] for vinfo in self.vineyards_info if vinfo["id"] == vineyard["vineyard_id"])
-            manager_name = next(manager["name"] for manager in self.managers if manager["id"] == vineyard["manager_id"])
-            if manager_name not in vineyard_managers[vineyard_name]:
-                vineyard_managers[vineyard_name].append(manager_name)
-        for key in vineyard_managers:
-            vineyard_managers[key].sort()
+            vineyard_name = vineyard_names[vineyard['vineyard_id']]
+            manager_name = manager_names[vineyard['manager_id']]
+            vineyard_managers[vineyard_name].add(manager_name)
+
+        for vineyard_name in vineyard_managers:
+            vineyard_managers[vineyard_name] = sorted(vineyard_managers[vineyard_name])
+
         return vineyard_managers
 
 if __name__ == "__main__":
